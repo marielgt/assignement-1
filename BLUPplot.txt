@@ -1,0 +1,210 @@
+
+
+
+lmerplot <- function(
+        model,
+        fixefcoefficients = 2:length(fixef(model)),
+        grouping.vars = NULL,
+        contrastlabels = names(fixef(model))[fixefcoefficients],
+        mfrow=NULL,
+	use.par=T,
+        jitter.amt=.5,
+        pch=16,
+        scatter.col=rgb(0,0,0,alpha=.5),
+        violin.col=rgb(0,0,0,alpha=.25),
+        ci.type="df.est",
+        conf=.95,
+        ci.n=100,
+        ci.boottype="norm",
+        fixef.ci.col=rgb(1,0,0,alpha=.75),
+        ranef.ci.col=rgb(0,0,1,alpha=.75),
+        xlims.equal=T,
+	xlab="Estimate"
+        ){
+        ### A function that plots the random effect variability associated with fixed-effect contrasts from an lmer model.
+        ### Inputs:
+        ###	model: an lmer model (I guess this may also work with a glmer model)
+        ###	fixefcoefficients: a numerical list of which coefficietns to plot. By default, this does
+        ###		does every coefficient except the intercept. If you have a design that is not fully
+        ###		repeated (e.g., some measures that are within-subjects but between-items) then this
+        ###		won't work for them by default, and you'll have to specify different stuff
+        ###	grouping.vars: The random effects. By default this is NULL and the function figures them out.
+        ###		However, the default may cause problems (like if you have a contrast that is within-subjects
+        ###		but between-items), and in such cases you may need to use this to plot only one random effect,
+        ###		and then call the function a second time to plot the other random effect with a different
+        ###		selection of coefficients to plot.
+        ###	contrastlabels: By default the plot will label the contrasts with the same labels the coefficients
+        ###		are given in the mixed-effect model summary. You can instead use this to specify (as a
+        ###		vector of strings) the names you want to appear on the axis for each contrast.
+        ###	mfrow: The layout of subplots. Each random effect gets one subplot. If you leave this as the
+        ###		default (NULL) then the function will figure out a reasonable layout (this works for
+        ###		up to 9 random effects). Otherwise, you can specify your own layout, the same way as
+        ###		you would for par(mfrow=...).
+        ###	jitter.amt: the amount of jitter to use for the univariate scatter of the BLUPs (default: .5)
+        ###	pch: The symbol to use for the univariate scatter; see ?points
+        ###	scatter.col: The color to use for the univariate scatter. By default this is an rgb() object making
+        ###		black color with alpha=.5 opacity (rgb(0,0,0,alpha=.5)); you could specify this as a different
+        ###		rgb object, or just as a color name (although then you lose the opacity).
+        ###	violin.col: The color to use for the lines of the violin plot surrounding the univariate scatter. Default
+        ###		is black with alpha=.25 opacity.
+        ###	ci.type: How the fixed-effect confidence interval should be calculated. The default, "df.est", estimates
+        ###		degrees of freedom using the formula from Baayen (2008:270): number of observations minus number
+        ###		of fixed-effects parameters. Alternatively, if you put anything else here, it will calculate a
+        ###		normal bootstrap CI based on ci.n replications. (Options I haven't implemented yet are the
+        ###		Satterthwaite approximation, or other types of bootstrap CIs, like percentile bootstrap---which
+        ###		require far more replications than normal bootstrap, and normal bootstrap is already quite slow
+        ###		for most mixed-effect models.)
+        ###	ci.n: number of replications to use for bootstrap CIs (default: 100)
+        ###	ci.boottype: type of bootstrap CI to compute. Default is "norm"; I haven't tested with other types and
+        ###		I suspect they won't work properly (because I have hard-coded the stuff that grabs the appropriate
+        ###		lower and upper bounds from the normal CI).
+        ###	fixef.ci.col: The color to use for plotting the fixed-effect mean and its CI. Default is red with alpha=.75.
+        ###	ranef.ci.col: The color to use for plotting the random-effect CI (the standard CI of the BLUP-adjusted estimates).
+        ###		Default is blue with alpha=.75.
+        ###	xlims.equal: If TRUE (the default), the plots for all random effects will have the same scale. If FALSE,
+        ###		each plot will be fitted to its own scale.
+        # Figures out what the random effects are, if they weren't specified explicitly
+        if( is.null( grouping.vars ) ){
+                grouping.vars <- names(ranef(model))
+        }
+
+        # Figures out the subplot layout. For up to 9 random effects (already pretty implausibly high)
+        #	this sets reasonable defaults. For more than 9 it doesn't; in that case you're better
+        #	off setting your own mfrow= in the function call.
+        if( is.null(mfrow) ){
+                mfrow <- rbind(
+                        c(1,1),
+                        c(1,2),
+                        c(1,3),
+                        c(2,2),
+                        c(2,3),
+                        c(2,3),
+                        c(2,4),
+                        c(2,4),
+                        c(3,3)
+                        )[ length(grouping.vars), ]
+        }
+        
+	if (use.par){
+		old.par <- par()
+		par( mfrow=mfrow, mar=c(5.1, 8.1, 1.1, 1.1) )
+	}
+
+        # calculate fixed-effect CIs
+        # this way uses the Baayen formula for estimating DFs (default)
+        if( ci.type=="df.est" ){
+                # estimate the dfs in the model
+                dfs <- nrow(model@frame) - nrow(summary(model)$coefficients)
+
+                # find margins of error (half-width of CIs)
+                MEs <- summary(model)$coefficients[,2] * qt( mean(c(1,conf)), dfs-1 )
+
+                CIs <- do.call( rbind, lapply( fixefcoefficients, function(x){ c(fixef(model)[x] - MEs[x], fixef(model)[x] + MEs[x] ) } ) )
+
+        # otherwise use bootstrap
+        } else {
+                getB <- function(.) { beta =getME(., "beta") }
+                message( paste( "Calculating bootstrap confidence intervals based on", ci.n, "samples. This may take a while." ) )
+                boo <- bootMer( model, getB, ci.n )
+                CIs <- do.call( rbind, lapply( fixefcoefficients, function(x){ boot.ci( boo, index=x, type="norm" )$normal[-1] } ) )
+        }
+
+
+        # If xlims.equal==T, then figure out the x-axis range that will fit all the datapoints for
+        #	all random effects. Otherwise, set 'null' so that plot() will figure out its own
+        #	xlim (which will probably be different for each random effect)
+        if( xlims.equal ){
+
+                # This huge mess figures out the range of BLUP-adjusted random effects across all contrasts and all random variables
+                xlim <- range(
+                                unlist( lapply( grouping.vars, function(gv){
+                                                unlist( lapply( fixefcoefficients, function(x){
+                                                        unlist(
+                                                                ranef(model)[[gv]][, which( names(ranef(model)[[gv]]) == names(fixef(model))[x] )] +
+                                                                t( matrix( fixef(model)[fixefcoefficients] ) )[rep(1,nrow( ranef(model)[[gv]] )),]
+                                                        )
+                                                } ) )
+                                } ) )
+                        )
+
+                # Adds a little padding below and above the bottom line (unless the x-limits don't include 0, then it stretches to get 0 in there)
+                xlim[1] <- ifelse( xlim[1]<0, 1.1*xlim[1], 0 )
+                xlim[2] <- ifelse( xlim[2]>0, 1.1*xlim[2], 0 )
+
+        } else {
+                xlim <- NULL
+        }
+
+        # Iterate through each random effect, giving it its own subplot
+        for( grouping.var in grouping.vars ){
+
+                # Figure out each fixef coefficient index's corresponding coefficient index for this random effect.
+                #	(they're not always the same; for example, coefficient 2 of the fixed effects could be
+                #	coefficient 1 of a given random effect, if e.g. there are no random intercepts)
+                ranefcoefficients <- unlist( lapply( fixefcoefficients, function(x){ which( names(ranef(model)[[grouping.var]]) == names(fixef(model))[x] ) } ) )
+
+                # how many groups (e.g. subjects or items) in this random effect
+                ngroup <- nrow(ranef(model)[[grouping.var]])
+
+                # how many contrasts will be plotted. (the default is all but the intercept
+                ncontrast <- length(fixefcoefficients)
+
+                # The coefficients for each level of the random effect (i.e., BLUP + fixef), organized as a long vector (for scatter plotting)
+                effects_vector <- unlist( ranef(model)[[grouping.var]][,ranefcoefficients] ) + rep(fixef(model)[fixefcoefficients], each=ngroup)
+
+                # The coefficients for each level of the random effect (i.e., BLUP + fixef), organized as a data frame (for violin plotting)
+                effects_df <- unname( do.call( data.frame, lapply( 1:length(fixefcoefficients), function(x){ ranef(model)[[grouping.var]][,ranefcoefficients[x]] + fixef(model)[fixefcoefficients[x]] } ) ) )
+                colnames(effects_df) <- contrastlabels
+
+                # Plot coefficients for each level of the random effect, as a scatter plot
+                plot( effects_vector, jitter( rep( (ncontrast):1, each=ngroup ), jitter.amt ), pch=pch, yaxt="n", ylab=NA, ylim=c(0,ncontrast+1), main=grouping.var, xlab=xlab, col=scatter.col, xlim=xlim )
+
+                # Make an axis with contrast labels instead of just numbers
+                axis(2, at=(ncontrast):1, labels=contrastlabels, las=2 )
+
+                # width for the violin plot
+                viowidth <- .45
+
+                # Iterate thru each contrast, plotting its violin and CIs
+                for( contrast in 1:(ncontrast) ){
+
+                        # The density function of the estimates for this coefficient at each level of this random effect
+                        d <- density( effects_df[,contrast] )
+
+                        # shrinking the density function to fit in the space we have
+                        dy <- d$y / max(d$y) * viowidth
+
+                        # plot the top and bottom of the violin
+                        lines( d$x, dy+(ncontrast-(contrast-1)), col=violin.col )
+                        lines( d$x, (ncontrast-(contrast-1))-dy, col=violin.col )
+
+                        # Plot the fixed-effect mean
+                        lines( rep(fixef(model)[fixefcoefficients[contrast]], 2), c(ncontrast-(contrast-1)+.45, ncontrast-(contrast-1)-.45), col=fixef.ci.col, lwd=5 )
+
+                        # Plot the fixed-effect CI (calculated as above)
+                        arrows( CIs[contrast,1], ncontrast-(contrast-1), CIs[contrast,2], ncontrast-(contrast-1), code=3, angle=90, length=.2, lwd=5, col=fixef.ci.col )
+
+                        # Figure out the random effect CI (normal CI of the BLUPs for this effect) and plot it
+                        ranefME <- sqrt( var( ranef(model)[[grouping.var]][,ranefcoefficients[contrast]] ) / ngroup ) * 2
+                        arrows( fixef(model)[fixefcoefficients[contrast]]-ranefME, ncontrast-(contrast-1), fixef(model)[fixefcoefficients[contrast]]+ranefME, ncontrast-(contrast-1), code=3, angle=90, length=.1, lwd=3, col=ranef.ci.col )
+                }
+
+
+                # Plot a vertical line at 0
+                lines( c(0,0), c(-1, ncontrast+2) )
+        }
+
+        # reset par to how it was before the function call
+	if (use.par){
+	        suppressWarnings( par(old.par) )
+	}
+}
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,133 @@
+---
+title: "Rapport - Projet Final"
+author: "Marie Legentil"
+date: "05/01/2020"
+output: html_document
+---
+
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+
+# Explication du jeu de données
+
+
+
+Le jeu de données étudié dans ce rapport a été utilisé pour la rédaction de l'article "Comprehension of presuppositions in school-age Cantonese-speaking children with and without autism spectrum disorders", par Cheung, C., Politzer-Ahles, S., Hwang, H., Chui, R., Leung, M., & Tang, T. (2017) publié dans *Clinical Linguistics and Phonetics*, n°31, (557-552).
+
+Les données ont été reccueilli pour étudier les troubles de la communication chez les personnes atteintes de troubles autistisques notamment pour voir si ces troubles limitent la compréhension des présuppostions. En effet, les présuppositions font parties intégrantes du discours et les comprendre, voir les utiliser, permet une communication optimale entre individus.
+
+Pour obtenir ce corpus, 21 enfants hong-kongais parlant cantonnais, avec des troubles autistiques et 106 enfants sans troubles, d'une moyenne d'âge de 8,8 ans, ont été juger sur leur abilité à percevoir la justesse des présuppositions dans des stimulis.
+
+Les différentes variables de l'expérience sont :
+
+- *Subject* : l'identification du sujet avec ou sans troubles
+- *Age_Month* : l'âge du sujet en mois
+- *stimuli* : le numéro du stimuli (40 stimulis différents)
+- *types* : le type de présupposition, il en a quatre : lexical, factive, existencielle et structurelle
+
+
+```{r results='hide'}
+library(readr)
+List_of_stimuli <- read_csv("List of stimuli.xlsx")
+```
+
+
+- *correct* : si le sujet a bien jugé de la justesse de la présuppostion
+- *repeated*: si le stimuli a du être répété, et si oui, combien de fois
+- *group* : si le sujet appartient au groupe d'enfants avec des troubles autistiques ou pas
+- *VMA* : résultat d'un test hong-kongais examinant les capacités à l'oral en cantonais des enfants
+- *Raven* : score d'un test d'intelligence non-verbal, logique
+- *sex* : genre du sujet
+
+
+
+## Caractérisations graphiques de relations entre variables du corpus
+
+
+
+
+Dans notre rapport nous allons nous intéresser à quelques relations entre variables du jeu de données, notamment les liens qu'entretient la variable *Correct* qui détermine si le sujet à identifier correctement la justesse de la présupposition, avec les variables d'âge, de genre et de types de stimulis.
+
+On commence par s'intéresser au lien entre la réussite et l'âge du  sujet : 
+
+
+
+```{r}
+library(readr)
+library(ggplot2)
+PresuppositionType_data <- read_csv("PresuppositionType_data.csv")
+data <-PresuppositionType_data
+ggplot(data) + 
+  geom_boxplot(aes(x = Correct, y = Age_Month))
+```
+
+
+On peut remarquer que les enfants les plus âgés se trompent moins : ils comprennent mieux les présuppositions. On conclut que leur compréhension est lié à leur expérience et à leur apprentissage. Ils apprenennent au fur et à mesure qu'ils grandissent.
+
+Pour les caractérisations suivantes, nous nous concentrons uniquement sur le groupes des enfants atteints de troubles autistiques. 
+
+
+
+```{r results='hide'}
+library(dplyr)
+data2 <- filter(data, Group == "ASD subjects")
+```
+
+
+
+On sait grâce à l'étude que globalement les enfants ayant ces troubles perçoivent moins les présuppositions mais en observant les données on constate de certaines présuppositions sont plus source d'erreurs que d'autres.
+
+
+
+```{r}
+ggplot(data2, aes(factor(Types), fill = factor(Correct))) + 
+  geom_bar(position = "fill") + 
+  scale_y_continuous(labels = scales::percent)+ 
+  xlab("Types") + ylab("") + labs(fill = "Correct")
+```
+
+
+
+En effet, on remarque que les présuppositions lexicales sont les plus difficiles à appréhender pour le groupe.
+
+On peut aller plus loin en ce demandant cette fois si le genre, sachant qu'il est listé en tant que variable, a un impact sur le taux de réussite. 
+
+
+
+```{r}
+ggplot(data2, aes(factor(Sex), fill = factor(Correct))) + 
+  geom_bar(position = "fill") + 
+  scale_y_continuous(labels = scales::percent)
+```
+
+
+On note que les deux taux de réussite féminin et masculin sont assez proches, donc il semble que le genre n'a pas d'impact dans l'expérience.
+
+
+
+### Questionnements sur le jeu de données
+
+
+
+A partir de ce jeu de données, plusieurs questions peuvent être soulevées. Tous d'abord le jeu de données ne concerne un échantillon de sujets restreint : on se concentre sur des enfants. Il  pourraît être pertinant de reconduire l'expérience sur un public plus âgé, voir adulte, car on peut se demander si les sujets atteints de troubles autistiques développent des stratégies les aidant à comprendre les présuppositions ou alors si justement leur compréhension reste limitée, même en grandissant.
+
+Le deuxième point qui peut être souligné c'est concernant la forme des stimulis. En effet, un stimuli prend la forme suivante : une phrase suivie d'une présupposition à partir de cette phrase. L'enfant doit ensuite évaluer si la présupposition est juste ou pas. On a donc une expérience basée sur des jugements de justesse, et ça nous amène à évaluer juste la capacité de compréhension des sujets, et pas les capacités performatives : on ne peut pas savoir si les sujets peuvent faire eux-même des présuppositions.
+
+On peut également se questionner sur la pertinence des variables *VMA* et *Raven* qui sont respectivements des tests de compétence orale et d'intelligence non-verbale et logiques. Concernant le score *Raven*, regardons ci-dessous le graphique montrant le lien entre réussite et score *Raven*. 
+
+
+
+```{r}
+data3 <- ggplot(data2, aes(x=Correct, y=Raven))+ geom_boxplot()
+data3 + ylim(90, 150)
+```
+
+
+
+On observe que les médianes sont à peu près au même niveau. Il semblerait que les sujets ayant un score *Raven* bas ont plus de chance de ne pas réussir l'expérience, cependant les différences restent minimales donc on peut remettre en doute cette affirmation.
+
+
