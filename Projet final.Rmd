@@ -31,6 +31,7 @@ Les différentes variables de l'expérience sont :
 ```{r eval=FALSE}
 library(readxl) 
 List_of_stimuli <- read_xlsx("List of stimuli.xlsx")
+#ouvre le tableau montrant les différents stimulis 
 ```
 - *Correct* : si le sujet a bien jugé de la justesse de la présuppostion
 - *Repeated*: si le stimuli a du être répété, et si oui, combien de fois
@@ -57,10 +58,11 @@ On commence par s'intéresser au lien entre la réussite et l'âge du  sujet :
 ```{r}
 library(readr)
 library(ggplot2)
-PresuppositionType_data <- read_csv("PresuppositionType_data.csv")
-data <-PresuppositionType_data
+PresuppositionType_data <- read_csv("PresuppositionType_data.csv") #charge les données
+data <-PresuppositionType_data 
 ggplot(data) + 
   geom_boxplot(aes(x = Correct, y = Age_Month))
+#création d'un graphique
 ```
 
 
@@ -72,7 +74,7 @@ Pour les caractérisations suivantes, nous nous concentrons uniquement sur le gr
 
 ```{r results='hide'}
 library(dplyr)
-data2 <- filter(data, Group == "ASD subjects")
+data2 <- filter(data, Group == "ASD subjects") #on filtre les données et on crée un nouveau tableau pour les sujets avec ASD
 ```
 
 
