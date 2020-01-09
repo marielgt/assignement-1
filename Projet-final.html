@@ -374,38 +374,26 @@ summary {
 <div id="explication-du-jeu-de-données" class="section level1">
 <h1>Explication du jeu de données</h1>
 <p>Le jeu de données étudié dans ce rapport a été utilisé pour la rédaction de l’article “Comprehension of presuppositions in school-age Cantonese-speaking children with and without autism spectrum disorders”, par Cheung, C., Politzer-Ahles, S., Hwang, H., Chui, R., Leung, M., &amp; Tang, T. (2017) publié dans <em>Clinical Linguistics and Phonetics</em>, n°31, (557-552).</p>
-<p>Les données ont été reccueilli pour étudier les troubles de la communication chez les personnes atteintes de troubles autistisques notamment pour voir si ces troubles limitent la compréhension des présuppostions. En effet, les présuppositions font parties intégrantes du discours et les comprendre, voir les utiliser, permet une communication optimale entre individus.</p>
+<p>Les données ont été reccueilli pour étudier les troubles de la communication chez les personnes atteintes de troubles autistiques notamment pour voir si ces troubles limitent la compréhension des présuppostions. En effet, les présuppositions font parties intégrantes du discours et les comprendre, voir les utiliser, permet une communication optimale entre individus.</p>
 <p>Pour obtenir ce corpus, 21 enfants hong-kongais parlant cantonnais, avec des troubles autistiques et 106 enfants sans troubles, d’une moyenne d’âge de 8,8 ans, ont été juger sur leur abilité à percevoir la justesse des présuppositions dans des stimulis.</p>
 <p>Les différentes variables de l’expérience sont :</p>
 <ul>
 <li><em>Subject</em> : l’identification du sujet avec ou sans troubles</li>
 <li><em>Age_Month</em> : l’âge du sujet en mois</li>
-<li><em>stimuli</em> : le numéro du stimuli (40 stimulis différents)</li>
-<li><em>types</em> : le type de présupposition, il en a quatre : lexical, factive, existencielle et structurelle</li>
+<li><em>Stimuli</em> : le numéro du stimuli (40 stimulis différents)</li>
+<li><em>Types</em> : le type de présupposition, il en a quatre : lexical, factive, existencielle et structurelle</li>
 </ul>
-<pre class="r"><code>library(readr)
-List_of_stimuli &lt;- read_csv(&quot;List of stimuli.xlsx&quot;)</code></pre>
-<pre><code>## Parsed with column specification:
-## cols(
-##   `PK` = col_character()
-## )</code></pre>
-<pre><code>## Warning: 63 parsing failures.
-## row            col  expected        actual                   file
-##   4 PK           embedded null 'List of stimuli.xlsx'
-##   8 PK           embedded null 'List of stimuli.xlsx'
-##   9 PK           embedded null 'List of stimuli.xlsx'
-##  11 NA             1 columns 2 columns     'List of stimuli.xlsx'
-##  12 NA             1 columns 2 columns     'List of stimuli.xlsx'
-## ... .............. ......... ............. ......................
-## See problems(...) for more details.</code></pre>
+<pre class="r"><code>library(readxl) 
+List_of_stimuli &lt;- read_xlsx(&quot;List of stimuli.xlsx&quot;)</code></pre>
 <ul>
-<li><em>correct</em> : si le sujet a bien jugé de la justesse de la présuppostion</li>
-<li><em>repeated</em>: si le stimuli a du être répété, et si oui, combien de fois</li>
-<li><em>group</em> : si le sujet appartient au groupe d’enfants avec des troubles autistiques ou pas</li>
+<li><em>Correct</em> : si le sujet a bien jugé de la justesse de la présuppostion</li>
+<li><em>Repeated</em>: si le stimuli a du être répété, et si oui, combien de fois</li>
+<li><em>Group</em> : si le sujet appartient au groupe d’enfants avec des troubles autistiques ou pas</li>
 <li><em>VMA</em> : résultat d’un test hong-kongais examinant les capacités à l’oral en cantonais des enfants</li>
 <li><em>Raven</em> : score d’un test d’intelligence non-verbal, logique</li>
-<li><em>sex</em> : genre du sujet</li>
+<li><em>Sex</em> : genre du sujet</li>
 </ul>
+<p>A part les variables <em>Age_Month</em>, <em>Repeated</em>, <em>VMA</em> et <em>Raven</em> qui sont des variables quantitatives, toutes les autres variables sont qualitatives.</p>
 <div id="caractérisations-graphiques-de-relations-entre-variables-du-corpus" class="section level2">
 <h2>Caractérisations graphiques de relations entre variables du corpus</h2>
 <p>Dans notre rapport nous allons nous intéresser à quelques relations entre variables du jeu de données, notamment les liens qu’entretient la variable <em>Correct</em> qui détermine si le sujet à identifier correctement la justesse de la présupposition, avec les variables d’âge, de genre et de types de stimulis.</p>

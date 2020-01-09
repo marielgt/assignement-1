@@ -18,7 +18,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Le jeu de données étudié dans ce rapport a été utilisé pour la rédaction de l'article "Comprehension of presuppositions in school-age Cantonese-speaking children with and without autism spectrum disorders", par Cheung, C., Politzer-Ahles, S., Hwang, H., Chui, R., Leung, M., & Tang, T. (2017) publié dans *Clinical Linguistics and Phonetics*, n°31, (557-552).
 
-Les données ont été reccueilli pour étudier les troubles de la communication chez les personnes atteintes de troubles autistisques notamment pour voir si ces troubles limitent la compréhension des présuppostions. En effet, les présuppositions font parties intégrantes du discours et les comprendre, voir les utiliser, permet une communication optimale entre individus.
+Les données ont été reccueilli pour étudier les troubles de la communication chez les personnes atteintes de troubles autistiques notamment pour voir si ces troubles limitent la compréhension des présuppostions. En effet, les présuppositions font parties intégrantes du discours et les comprendre, voir les utiliser, permet une communication optimale entre individus.
 
 Pour obtenir ce corpus, 21 enfants hong-kongais parlant cantonnais, avec des troubles autistiques et 106 enfants sans troubles, d'une moyenne d'âge de 8,8 ans, ont été juger sur leur abilité à percevoir la justesse des présuppositions dans des stimulis.
 
@@ -26,22 +26,20 @@ Les différentes variables de l'expérience sont :
 
 - *Subject* : l'identification du sujet avec ou sans troubles
 - *Age_Month* : l'âge du sujet en mois
-- *stimuli* : le numéro du stimuli (40 stimulis différents)
-- *types* : le type de présupposition, il en a quatre : lexical, factive, existencielle et structurelle
-
-
-```{r results='hide'}
-library(readr)
-List_of_stimuli <- read_csv("List of stimuli.xlsx")
+- *Stimuli* : le numéro du stimuli (40 stimulis différents)
+- *Types* : le type de présupposition, il en a quatre : lexical, factive, existencielle et structurelle
+```{r eval=FALSE}
+library(readxl) 
+List_of_stimuli <- read_xlsx("List of stimuli.xlsx")
 ```
-
-
-- *correct* : si le sujet a bien jugé de la justesse de la présuppostion
-- *repeated*: si le stimuli a du être répété, et si oui, combien de fois
-- *group* : si le sujet appartient au groupe d'enfants avec des troubles autistiques ou pas
+- *Correct* : si le sujet a bien jugé de la justesse de la présuppostion
+- *Repeated*: si le stimuli a du être répété, et si oui, combien de fois
+- *Group* : si le sujet appartient au groupe d'enfants avec des troubles autistiques ou pas
 - *VMA* : résultat d'un test hong-kongais examinant les capacités à l'oral en cantonais des enfants
 - *Raven* : score d'un test d'intelligence non-verbal, logique
-- *sex* : genre du sujet
+- *Sex* : genre du sujet
+
+A part les variables *Age_Month*, *Repeated*, *VMA* et *Raven* qui sont des variables quantitatives, toutes les autres variables sont qualitatives.
 
 
 
